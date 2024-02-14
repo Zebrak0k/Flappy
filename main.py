@@ -4,11 +4,10 @@ import random
 import json
 
 pygame.init()
+pygame.display.set_caption('Flappy bird')
 clock = pygame.time.Clock()
 
 FPS = 70
-INDENT = 50
-SPEED = 700
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 700
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -84,7 +83,6 @@ class Flappy(pygame.sprite.Sprite):
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                add = pygame.transform.scale(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)), (100, 30))
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
@@ -157,12 +155,11 @@ class Button:
         self.tutorial_rect = self.tutorial.get_rect()
         self.tutorial_rect.topleft = (x - 40, y - 100)
 
-    def draw_Start(self):
-        pass
+    def draw_start(self):
         screen.blit(self.flappy_img, (self.flappy_img_rect.x, self.flappy_img_rect.y))
         screen.blit(self.tutorial, (self.tutorial_rect.x, self.tutorial_rect.y))
 
-    def draw_GameOver(self):
+    def draw_gameover(self):
 
         action = False
         pos = pygame.mouse.get_pos()
@@ -196,14 +193,14 @@ class Record:
         self.old_record_rect = self.old_record_img.get_rect()
         self.old_record_rect.topleft = (SCREEN_WIDTH // 2 - 88, SCREEN_HEIGHT // 2 + 80)
 
-    def draw(self, medal, score):
+    def draw(self, reward, score_now):
         self.best_record = self.check_best()
         screen.blit(self.table_img, (self.table_rect.x, self.table_rect.y))
         draw_text(self.best_record, pygame.font.Font('images/font/numbers.ttf', 25), 'black', SCREEN_WIDTH // 2 + 50,
                   SCREEN_HEIGHT // 2 + 115)
-        draw_text(str(score), pygame.font.Font('images/font/numbers.ttf', 25), 'black', SCREEN_WIDTH // 2 + 50,
+        draw_text(str(score_now), pygame.font.Font('images/font/numbers.ttf', 25), 'black', SCREEN_WIDTH // 2 + 50,
                   SCREEN_HEIGHT // 2 + 78)
-        if medal == 1:
+        if reward == 1:
             screen.blit(self.new_rec_img, (self.new_rec_rect.x, self.new_rec_rect.y))
         else:
             screen.blit(self.old_record_img, (self.old_record_rect.x, self.old_record_rect.y))
@@ -303,12 +300,12 @@ while True:
 
         record.draw(medal, score)
 
-        if button.draw_GameOver() is True:
+        if button.draw_gameover() is True:
             game_over = False
             restart_game()
 
     if fly is False and game_over is False:
-        button.draw_Start()
+        button.draw_start()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
