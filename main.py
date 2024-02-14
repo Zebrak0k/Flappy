@@ -7,6 +7,7 @@ pygame.init()
 pygame.display.set_caption('Flappy bird')
 clock = pygame.time.Clock()
 
+# Константы
 FPS = 70
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 700
@@ -28,18 +29,17 @@ fly = False
 game_over = False
 pass_pipe = False
 
+# Звуки для игры
 sound_hit = pygame.mixer.Sound('sound/assets_audio_hit.wav')
 sound_hit.set_volume(0.1)
-
 sound_wing = pygame.mixer.Sound('sound/assets_audio_wing.wav')
 sound_wing.set_volume(0.1)
-
 sound_score = pygame.mixer.Sound('sound/assets_audio_point.wav')
 sound_score.set_volume(0.1)
-
 sound_die = pygame.mixer.Sound('sound/assets_audio_die.wav')
 sound_die.set_volume(0.1)
 
+# изображения для фона
 background = pygame.image.load('images/Ground/bglong.png')
 ground = pygame.image.load('images/Ground/ground.png')
 
@@ -47,11 +47,13 @@ animation = pygame.USEREVENT + 1
 pygame.time.set_timer(animation, 125)
 
 
+# Функция для рисования текста на экране
 def draw_text(text, font, color, x, y):
     img = font.render(text, True, color)
     screen.blit(img, (x, y))
 
 
+# Функция для перезапуска игры
 def restart_game():
     global score, medal
     pipe_group.empty()
@@ -61,6 +63,7 @@ def restart_game():
     medal = 0
 
 
+# Класс птицы
 class Flappy(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y, pos_x, pos_y):
         super().__init__(flappy_group)
@@ -74,6 +77,8 @@ class Flappy(pygame.sprite.Sprite):
         self.vel = 0
         self.clicked = False
 
+    # Нарезаем одно большое изображение на много маленьких
+    # для создания анимации
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
                                 sheet.get_height() // rows)
@@ -86,6 +91,7 @@ class Flappy(pygame.sprite.Sprite):
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
+    # Анимация
     def animation(self):
         if game_over is False:
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
@@ -94,6 +100,7 @@ class Flappy(pygame.sprite.Sprite):
         else:
             self.image = pygame.transform.rotate(self.frames[self.cur_frame], -90)
 
+    # Обновление Flappy на дисплее
     def update(self):
         if fly is True:
             if self.vel < 10:
@@ -110,6 +117,7 @@ class Flappy(pygame.sprite.Sprite):
                 self.clicked = False
 
 
+# Класс трубы
 class Pipe(pygame.sprite.Sprite):
     def __init__(self, x, y, position, i):
         pygame.sprite.Sprite.__init__(self)
@@ -123,6 +131,7 @@ class Pipe(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.move(x, y)
 
+        # Определяем верхнюю и нижнюю трубы
         if self.position == 1:
             self.image = pygame.transform.flip(self.image, False, True)
             self.rect.bottomleft = [self.x, self.y - pipe_gap // 2]
@@ -135,6 +144,7 @@ class Pipe(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс кнопки restart и начального окна
 class Button:
     def __init__(self, x, y):
         self.game_over = pygame.image.load('images/Other/gameover.png')
@@ -155,10 +165,12 @@ class Button:
         self.tutorial_rect = self.tutorial.get_rect()
         self.tutorial_rect.topleft = (x - 40, y - 100)
 
+    # Рисуем окно начала
     def draw_start(self):
         screen.blit(self.flappy_img, (self.flappy_img_rect.x, self.flappy_img_rect.y))
         screen.blit(self.tutorial, (self.tutorial_rect.x, self.tutorial_rect.y))
 
+    # Рисуем поражение и функционал кнопки
     def draw_gameover(self):
 
         action = False
@@ -174,6 +186,7 @@ class Button:
         return action
 
 
+# Класс рекордов
 class Record:
     def __init__(self):
         self.best_record = self.check_best()
@@ -193,6 +206,7 @@ class Record:
         self.old_record_rect = self.old_record_img.get_rect()
         self.old_record_rect.topleft = (SCREEN_WIDTH // 2 - 88, SCREEN_HEIGHT // 2 + 80)
 
+    # Рисуем окно очков после поражения
     def draw(self, reward, score_now):
         self.best_record = self.check_best()
         screen.blit(self.table_img, (self.table_rect.x, self.table_rect.y))
@@ -205,12 +219,14 @@ class Record:
         else:
             screen.blit(self.old_record_img, (self.old_record_rect.x, self.old_record_rect.y))
 
+    # Проверяем лучший результат из json
     def check_best(self):
         with open('record.json') as rec_file:
             data = json.load(rec_file)
 
         return data['the_best']
 
+    # Записываем лучший результат в json
     def new_record(self, new_record):
         with open('record.json') as rec_file:
             data = json.load(rec_file)
@@ -219,6 +235,7 @@ class Record:
             json.dump(data, rec_file, ensure_ascii=False, indent=4)
 
 
+# Создаем группы спрайтов
 flappy_group = pygame.sprite.Group()
 pipe_group = pygame.sprite.Group()
 
@@ -246,30 +263,37 @@ while True:
 
     screen.blit(ground, (scroll_ground, SCREEN_HEIGHT - 100))
 
+    # Система начисления очков за пролет между труб
     if len(pipe_group) > 0:
+        # Проверяем находится ли Flappy между труб
         if flappy_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left \
                 and flappy_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right \
                 and pass_pipe is False:
             pass_pipe = True
+        # Если Flappy пересекает левой частью конец трубы, то начисляем балл
         if pass_pipe is True:
             if flappy_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
                 pass_pipe = False
                 score += 1
                 sound_score.play(0)
+    # Рисуем количество очков
     draw_text(str(score), font, 'white', SCREEN_WIDTH // 2 - 20, 20)
 
+    # Проверяем на столкновение Flappy с трубой и вылет за конец экрана по y
     if pygame.sprite.groupcollide(pipe_group, flappy_group, False, False) or flappy.rect.bottom < 0:
         if game_over is False:
             sound_hit.play(0)
             sound_die.play(0)
         game_over = True
 
+    # Проверяем на столкновение Flappy с землей
     if flappy.rect.bottom >= 600:
         if game_over is False:
             sound_hit.play(0)
         game_over = True
         fly = False
 
+    # Система появленя труб
     if game_over is False and fly is True:
         time_now = pygame.time.get_ticks()
         if time_now - last_pipe > 1000:
@@ -281,29 +305,37 @@ while True:
             pipe_group.add(top_pipe)
             last_pipe = time_now
 
+        # Скролл труб
         pipe_group.update()
 
         if game_over is False:
+
+            # Прокрутка заднего фона
             scroll_background -= speed_scroll_background
             if scroll_background < -427:
                 scroll_background = 0
 
+            # Прокрутка земли
             scroll_ground -= speed_scroll_ground
             if scroll_ground < -100:
                 scroll_ground = 0
 
     if game_over is True:
-
+        # Проверяем на наличие нового рекорда
         if score > int(record.best_record):
             record.new_record(str(score))
             medal = 1
 
+        # Рисуем очки и награду (медаль)
         record.draw(medal, score)
 
+        # Если игрок кликнул по кнопке, то класс возвращает True, и игра перезапускается
         if button.draw_gameover() is True:
             game_over = False
             restart_game()
 
+    # Проверяем идет ли полет и проигрыш
+    # И рисуем стартовое окно
     if fly is False and game_over is False:
         button.draw_start()
 
@@ -311,9 +343,11 @@ while True:
         if event.type == pygame.QUIT:
             terminate()
 
+        # Клик начинает полет
         if event.type == pygame.MOUSEBUTTONDOWN and fly is False and game_over is False:
             fly = True
 
+        # Анимация Flappy
         if event.type == animation:
             flappy.animation()
 
