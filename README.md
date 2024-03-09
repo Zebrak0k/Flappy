@@ -33,4 +33,4 @@ python main.py
 
 ## Автор
 
-Беляков Иван
+Zebrakok
